@@ -1,0 +1,30 @@
+version: '2'
+
+services:
+
+  nginx:
+    image: nginx
+    networks:
+      oauth:
+        ipv4_address: 172.15.66.10
+
+  proxy:
+    build: .
+    image: melnikk/oauth2_proxy
+    volumes:
+      - "./etc/oauth2_proxy.cfg:/etc/oauth2_proxy.cfg"
+    command: /etc/oauth2_proxy.cfg
+    networks:
+      oauth:
+        ipv4_address: 172.15.66.50
+
+networks:
+  oauth:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.15.66.0/24
+        gateway: 172.15.66.1

@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/18F/hmacauth"
-	"github.com/bitly/oauth2_proxy/providers"
+	"github.com/melnikk/oauth2_proxy/providers"
 )
 
 // Configuration Options that can be set by Command Line Flag, or Config File
@@ -49,6 +49,7 @@ type Options struct {
 	CookieHttpOnly bool          `flag:"cookie-httponly" cfg:"cookie_httponly"`
 
 	Upstreams             []string `flag:"upstream" cfg:"upstreams"`
+	Allowed               map[string]Customer `cfg:"allowed"`
 	SkipAuthRegex         []string `flag:"skip-auth-regex" cfg:"skip_auth_regex"`
 	PassBasicAuth         bool     `flag:"pass-basic-auth" cfg:"pass_basic_auth"`
 	BasicAuthPassword     string   `flag:"basic-auth-password" cfg:"basic_auth_password"`
@@ -83,6 +84,11 @@ type Options struct {
 	signatureData *SignatureData
 }
 
+type Customer struct {
+	Hostname string
+	Groups   []string
+}
+
 type SignatureData struct {
 	hash crypto.Hash
 	key  string
@@ -107,6 +113,7 @@ func NewOptions() *Options {
 		PassHostHeader:      true,
 		ApprovalPrompt:      "force",
 		RequestLogging:      true,
+		Allowed:             make(map[string]Customer),
 	}
 }
 

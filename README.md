@@ -6,7 +6,7 @@ oauth2_proxy
 A reverse proxy and static file server that provides authentication using Providers (Google, GitHub, and others)
 to validate accounts by email, domain or group.
 
-[![Build Status](https://secure.travis-ci.org/bitly/oauth2_proxy.png?branch=master)](http://travis-ci.org/bitly/oauth2_proxy)
+[![Build Status](https://secure.travis-ci.org/melnikk/oauth2_proxy.png?branch=master)](http://travis-ci.org/melnikk/oauth2_proxy)
 
 
 ![Sign In Page](https://cloud.githubusercontent.com/assets/45028/4970624/7feb7dd8-6886-11e4-93e0-c9904af44ea8.png)
@@ -17,7 +17,7 @@ to validate accounts by email, domain or group.
 
 ## Installation
 
-1. Download [Prebuilt Binary](https://github.com/bitly/oauth2_proxy/releases) (current release is `v2.1`) or build with `$ go get github.com/bitly/oauth2_proxy` which will put the binary in `$GOROOT/bin`
+1. Download [Prebuilt Binary](https://github.com/melnikk/oauth2_proxy/releases) (current release is `v2.1`) or build with `$ go get github.com/melnikk/oauth2_proxy` which will put the binary in `$GOROOT/bin`
 2. Select a Provider and Register an OAuth Application with a Provider
 3. Configure OAuth2 Proxy using config file, command line options, or environment variables
 4. Configure SSL or Deploy behind a SSL endpoint (example provided for Nginx)

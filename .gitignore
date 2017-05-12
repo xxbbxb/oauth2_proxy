@@ -1,3 +1,4 @@
+.idea/
 google_auth_proxy
 oauth2_proxy
 # Go.gitignore
@@ -28,3 +29,7 @@ dist
 
 # Editor swap/temp files
 .*.swp
+etc/
+test
+oauth2_proxy
+/vendor/*/

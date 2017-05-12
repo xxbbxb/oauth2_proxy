@@ -1,0 +1,30 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "yPT+niKHgZg7Fhwg5QXoYczvwRY=",
+			"path": "github.com/bmizerany/assert",
+			"revision": "b7ed37b82869576c289d7d97fb2bbd8b64a0cb28",
+			"revisionTime": "2016-06-11T22:19:34Z"
+		},
+		{
+			"checksumSHA1": "1LWe3iDPpInibsVD1TzbTWSDXFc=",
+			"path": "github.com/dgrijalva/jwt-go",
+			"revision": "f2193411bd642f7db03249fd79d5292c9b34916a"
+		},
+		{
+			"checksumSHA1": "eOXF2PEvYLMeD8DSzLZJWbjYzco=",
+			"path": "github.com/kr/pretty",
+			"revision": "cfb55aafdaf3ec08f0db22699ab822c50091b1c4",
+			"revisionTime": "2016-08-23T17:07:15Z"
+		},
+		{
+			"checksumSHA1": "uulQHQ7IsRKqDudBC8Go9J0gtAc=",
+			"path": "github.com/kr/text",
+			"revision": "7cafcd837844e784b526369c9bce262804aebc60",
+			"revisionTime": "2016-05-04T02:26:26Z"
+		}
+	],
+	"rootPath": "github.com/melnikk/oauth2_proxy"
+}
