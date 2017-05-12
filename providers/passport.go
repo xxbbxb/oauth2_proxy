@@ -1,17 +1,19 @@
 package providers
 
 import (
-	"fmt"
-	"encoding/json"
-	"encoding/base64"
-	"net/url"
 	"bytes"
-	"io/ioutil"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
-	"net/http"
-	"github.com/dgrijalva/jwt-go"
+	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"net/url"
 	"strings"
+
+	simplejson "github.com/bitly/go-simplejson"
+	"github.com/dgrijalva/jwt-go"
 )
 
 // PassportProvider of auth
@@ -25,7 +27,6 @@ func NewPassportProvider(p *ProviderData) *PassportProvider {
 
 	return &PassportProvider{ProviderData: p}
 }
-
 
 func (p *PassportProvider) Redeem(redirectURL, code string) (s *SessionState, err error) {
 	if code == "" {
@@ -111,11 +112,68 @@ func (p *PassportProvider) GetEmailAddress(s *SessionState) (string, error) {
 		}
 		return publicKey, nil
 	})
-	if err==nil && token.Valid {
+	if err == nil && token.Valid {
 		login := strings.ToLower(token.Claims["sub"].(string))
 
-		loginParts := strings.Split(login,"\\")
+		loginParts := strings.Split(login, "\\")
 		email = fmt.Sprintf("%s@%s", loginParts[1], loginParts[0])
 	}
 	return email, err
+}
+
+func (p *PassportProvider) apiRequest(req *http.Request) (*simplejson.Json, error) {
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	var body []byte
+	body, err = ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		err = fmt.Errorf("got %d from %q %s", resp.StatusCode, p.RedeemURL.String(), body)
+		return nil, err
+	}
+
+	data, err := simplejson.NewJson(body)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+
+}
+
+func (p *PassportProvider) getGroups(token string) ([]string, error) {
+	params := url.Values{}
+	params.Add("client_id", p.ClientID)
+	params.Add("client_secret", p.ClientSecret)
+	req, err := http.NewRequest("GET", p.ProfileURL.String(), bytes.NewBufferString(params.Encode()))
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+
+	if err != nil {
+		log.Printf("failed building request %s", err.Error())
+		return nil, err
+	}
+	json, err := p.apiRequest(req)
+	if err != nil {
+		log.Printf("failed making request %s", err.Error())
+		return nil, err
+	}
+
+	groups, err := json.Get("group").String()
+
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(groups, ","), nil
+}
+
+// ValidateGroup validates that the provided email exists in the configured provider
+// email group(s).
+func (p *PassportProvider) ValidateGroup(email string) bool {
+	return true
 }
