@@ -1,0 +1,15 @@
+# goreleaser.yml
+# Build customization
+build:
+  binary: oauth2-proxy
+  goos:
+    - windows
+    - linux
+  goarch:
+    - amd64
+
+# Archive customization
+archive:
+  format: tar.gz
+  files:
+    - LICENSE

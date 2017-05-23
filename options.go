@@ -49,7 +49,6 @@ type Options struct {
 	CookieHttpOnly bool          `flag:"cookie-httponly" cfg:"cookie_httponly"`
 
 	Upstreams             []string            `flag:"upstream" cfg:"upstreams"`
-	Allowed               map[string]Customer `cfg:"allowed"`
 	SkipAuthRegex         []string            `flag:"skip-auth-regex" cfg:"skip_auth_regex"`
 	PassBasicAuth         bool                `flag:"pass-basic-auth" cfg:"pass_basic_auth"`
 	BasicAuthPassword     string              `flag:"basic-auth-password" cfg:"basic_auth_password"`
@@ -113,7 +112,6 @@ func NewOptions() *Options {
 		PassHostHeader:      true,
 		ApprovalPrompt:      "force",
 		RequestLogging:      true,
-		Allowed:             make(map[string]Customer),
 	}
 }
 
@@ -250,6 +248,8 @@ func parseProviderInfo(o *Options, msgs []string) []string {
 		p.Configure(o.AzureTenant)
 	case *providers.GitHubProvider:
 		p.SetOrgTeam(o.GitHubOrg, o.GitHubTeam)
+	case *providers.PassportProvider:
+		p.LoadAllowed(os.Getenv("AUTH_FILE"))
 	case *providers.GoogleProvider:
 		if o.GoogleServiceAccountJSON != "" {
 			file, err := os.Open(o.GoogleServiceAccountJSON)

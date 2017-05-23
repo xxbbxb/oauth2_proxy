@@ -3,7 +3,6 @@ package providers
 import (
 	"bytes"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -14,17 +13,21 @@ import (
 
 	simplejson "github.com/bitly/go-simplejson"
 	"github.com/dgrijalva/jwt-go"
+	"gopkg.in/yaml.v2"
 )
+
+
+type AuthConfiguration map[string][]string
 
 // PassportProvider of auth
 type PassportProvider struct {
 	*ProviderData
+	auth          AuthConfiguration
 }
 
 // NewPassportProvider creates passport provider
 func NewPassportProvider(p *ProviderData) *PassportProvider {
 	p.ProviderName = "Passport"
-
 	return &PassportProvider{ProviderData: p}
 }
 
@@ -56,50 +59,15 @@ func (p *PassportProvider) Redeem(redirectURL, code string) (s *SessionState, er
 	token := []byte(fmt.Sprintf("%s:%s", p.ClientID, p.ClientSecret))
 	req.Header.Set("Authorization", fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString(token)))
 
-	var resp *http.Response
-	resp, err = http.DefaultClient.Do(req)
+	resp, err := p.apiRequest(req)
 	if err != nil {
 		return nil, err
 	}
-	var body []byte
-	body, err = ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		return
+	accessToken, err := resp.Get("access_token").String()
+	s = &SessionState{
+		AccessToken: accessToken,
 	}
 
-	if resp.StatusCode != 200 {
-		err = fmt.Errorf("got %d from %q %s", resp.StatusCode, p.RedeemURL.String(), body)
-		return
-	}
-
-	// blindly try json and x-www-form-urlencoded
-	var jsonResponse struct {
-		AccessToken string `json:"access_token"`
-	}
-	err = json.Unmarshal(body, &jsonResponse)
-
-	if err == nil {
-
-		if err != nil {
-			return
-		}
-		s = &SessionState{
-			AccessToken: jsonResponse.AccessToken,
-		}
-		return
-	}
-
-	var v url.Values
-	v, err = url.ParseQuery(string(body))
-	if err != nil {
-		return
-	}
-	if a := v.Get("access_token"); a != "" {
-		s = &SessionState{AccessToken: a}
-	} else {
-		err = fmt.Errorf("no access token found %s", body)
-	}
 	return
 }
 
@@ -116,9 +84,20 @@ func (p *PassportProvider) GetEmailAddress(s *SessionState) (string, error) {
 		login := strings.ToLower(token.Claims["sub"].(string))
 
 		loginParts := strings.Split(login, "\\")
-		email = fmt.Sprintf("%s@%s", loginParts[1], loginParts[0])
+		if len(loginParts)>1 {
+			email = fmt.Sprintf("%s@%s", loginParts[1], loginParts[0])
+			groups, _ := p.getGroups(token.Raw)
+			s.CacheGroups(groups)
+		} else {
+			email = fmt.Sprintf("%s@local", loginParts[0])
+			s.CacheGroups([]string{"local"})
+		}
 	}
 	return email, err
+}
+
+func (s *SessionState) CacheGroups(groups []string) {
+	s.Groups = groups
 }
 
 func (p *PassportProvider) apiRequest(req *http.Request) (*simplejson.Json, error) {
@@ -174,6 +153,36 @@ func (p *PassportProvider) getGroups(token string) ([]string, error) {
 
 // ValidateGroup validates that the provided email exists in the configured provider
 // email group(s).
-func (p *PassportProvider) ValidateGroup(email string) bool {
-	return true
+func (p *PassportProvider) ValidateGroupByHost(host string, groups []string) bool {
+	for _, group := range groups {
+		allowedGroups := p.getAllowedGroups(host)
+		val, ex := allowedGroups[group]
+		if ex && val {
+			return true
+		}
+	}
+	return false
+}
+
+func (p *PassportProvider) LoadAllowed(auth string) {
+	yamlFile, err := ioutil.ReadFile(auth)
+	if err != nil {
+		log.Printf("yamlFile.Get err   #%v, %s ", err, auth)
+	}
+	p.auth = make(AuthConfiguration)
+	err = yaml.Unmarshal(yamlFile, &p.auth)
+	if err != nil {
+		log.Fatalf("Unmarshal: %v", err)
+	}
+}
+
+func (p *PassportProvider) getAllowedGroups(host string) map[string]bool {
+	groups, ex := p.auth[host]
+	res := make(map[string]bool)
+	if ex {
+		for _, group := range groups {
+			res[group] = true
+		}
+	}
+	return res
 }

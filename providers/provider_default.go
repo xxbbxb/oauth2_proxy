@@ -112,6 +112,10 @@ func (p *ProviderData) ValidateGroup(email string) bool {
 	return true
 }
 
+func (p *ProviderData) ValidateGroupByHost(string, []string) bool {
+	return true
+}
+
 func (p *ProviderData) ValidateSessionState(s *SessionState) bool {
 	return validateToken(p, s.AccessToken, nil)
 }
