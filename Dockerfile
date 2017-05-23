@@ -1,1 +1,1 @@
-FROM golang:onbuild-alpine
+FROM golang:onbuild
