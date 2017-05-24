@@ -1,7 +1,7 @@
 .PHONY: build
 
 clean:
-	rm ./oauth2_proxy
+	rm -f ./oauth2_proxy
 	docker-compose down
 
 default: build
