@@ -249,7 +249,7 @@ func parseProviderInfo(o *Options, msgs []string) []string {
 	case *providers.GitHubProvider:
 		p.SetOrgTeam(o.GitHubOrg, o.GitHubTeam)
 	case *providers.PassportProvider:
-		p.LoadAllowed(os.Getenv("AUTH_FILE"))
+		p.LoadAllowed()
 	case *providers.GoogleProvider:
 		if o.GoogleServiceAccountJSON != "" {
 			file, err := os.Open(o.GoogleServiceAccountJSON)

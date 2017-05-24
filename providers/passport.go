@@ -14,6 +14,7 @@ import (
 	simplejson "github.com/bitly/go-simplejson"
 	"github.com/dgrijalva/jwt-go"
 	"gopkg.in/yaml.v2"
+	"os"
 )
 
 
@@ -74,7 +75,8 @@ func (p *PassportProvider) Redeem(redirectURL, code string) (s *SessionState, er
 func (p *PassportProvider) GetEmailAddress(s *SessionState) (string, error) {
 	email := ""
 	token, err := jwt.Parse(s.AccessToken, func(token *jwt.Token) (interface{}, error) {
-		publicKey, err := ioutil.ReadFile("etc/passport.pub")
+		passportKey := os.Getenv("PASSPORT_KEY")
+		publicKey, err := ioutil.ReadFile(passportKey)
 		if err != nil {
 			log.Printf("Error loading public key: %s", err.Error())
 		}
@@ -164,7 +166,8 @@ func (p *PassportProvider) ValidateGroupByHost(host string, groups []string) boo
 	return false
 }
 
-func (p *PassportProvider) LoadAllowed(auth string) {
+func (p *PassportProvider) LoadAllowed() {
+	auth := os.Getenv("AUTH_FILE")
 	yamlFile, err := ioutil.ReadFile(auth)
 	if err != nil {
 		log.Printf("yamlFile.Get err   #%v, %s ", err, auth)
