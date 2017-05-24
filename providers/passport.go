@@ -159,7 +159,7 @@ func (p *PassportProvider) ValidateGroupByHost(host string, groups []string) boo
 	for _, group := range groups {
 		allowedGroups := p.getAllowedGroups(host)
 		val, ex := allowedGroups[group]
-		if ex && val {
+		if group=="*" || (ex && val) {
 			return true
 		}
 	}
