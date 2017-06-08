@@ -156,10 +156,14 @@ func (p *PassportProvider) getGroups(token string) ([]string, error) {
 // ValidateGroup validates that the provided email exists in the configured provider
 // email group(s).
 func (p *PassportProvider) ValidateGroupByHost(host string, groups []string) bool {
+	allowedGroups := p.getAllowedGroups(host)
+	_, exAll = allowedGroups["*"]
+	if exAll {
+		return true
+	}
 	for _, group := range groups {
-		allowedGroups := p.getAllowedGroups(host)
 		val, ex := allowedGroups[group]
-		if group=="*" || (ex && val) {
+		if ex && val {
 			return true
 		}
 	}
