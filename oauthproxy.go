@@ -553,7 +553,7 @@ func (p *OAuthProxy) OAuthCallback(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	// set cookie, or deny
-	if p.Validator(session.Email) && p.provider.ValidateGroup(session.Email) && p.provider.ValidateGroupByHost(req.Header.Get("Host"), session.Groups) {
+	if p.Validator(session.Email) && p.provider.ValidateGroup(session.Email) && p.provider.ValidateGroupByHost(req.Host, session.Groups) {
 		log.Printf("%s authentication complete %s", remoteAddr, session)
 		err := p.SaveSession(rw, req, session)
 		if err != nil {
