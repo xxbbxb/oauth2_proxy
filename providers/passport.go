@@ -157,7 +157,7 @@ func (p *PassportProvider) getGroups(token string) ([]string, error) {
 // email group(s).
 func (p *PassportProvider) ValidateGroupByHost(host string, groups []string) bool {
 	allowedGroups := p.getAllowedGroups(host)
-	_, exAll = allowedGroups["*"]
+	_, exAll := allowedGroups["*"]
 	if exAll {
 		return true
 	}
