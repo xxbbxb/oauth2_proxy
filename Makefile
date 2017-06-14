@@ -8,8 +8,8 @@ default: clean prepare test build
 test: prepare
 
 prepare:
-	go get "github.com/kardianos/govendor"
-	GOPATH=/go govendor sync
+	GOPATH=. go get "github.com/kardianos/govendor"
+	GOPATH=. govendor sync
 
 clean:
 	rm -rf build
