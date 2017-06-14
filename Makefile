@@ -9,7 +9,7 @@ test: prepare
 
 prepare:
 	go get "github.com/kardianos/govendor"
-	GOPATH=/go/src govendor sync
+	GOPATH=/go govendor sync
 
 clean:
 	rm -rf build
