@@ -14,6 +14,7 @@ install:
 - gem install fpm
 script:
 - make prepare
+- make build
 - make rpm
 before_deploy:
 - export PACKAGE_NAME=$(ls build/oauth2-proxy-*.x86_64.rpm | tail -n1)
