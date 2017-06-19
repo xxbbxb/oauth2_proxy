@@ -15,8 +15,8 @@ clean:
 	rm -rf build
 
 build:
-	mkdir -p build/
-	go build -ldflags "-X main.version=${VERSION}-${RELEASE}" -o build/oauth2-proxy .
+	mkdir -p build/root/usr/bin
+	go build -ldflags "-X main.version=${VERSION}-${RELEASE}" -o build/root/usr/bin/oauth2-proxy .
 
 rpm:
 	fpm -t rpm \
