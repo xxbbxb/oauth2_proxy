@@ -170,6 +170,20 @@ func (p *PassportProvider) ValidateGroupByHost(host string, groups []string) boo
 	return false
 }
 
+// GetLoginURL with typical oauth parameters
+func (p *PassportProvider) GetLoginURL(redirectURI, state string) string {
+	var a url.URL
+	a = *p.LoginURL
+	params, _ := url.ParseQuery(a.RawQuery)
+	params.Set("redirect_uri", redirectURI)
+	params.Add("scope", p.Scope)
+	params.Set("client_id", p.ClientID)
+	params.Set("response_type", "code")
+	params.Add("state", state)
+	a.RawQuery = params.Encode()
+	return a.String()
+}
+
 func (p *PassportProvider) LoadAllowed() {
 	auth := os.Getenv("AUTH_FILE")
 	yamlFile, err := ioutil.ReadFile(auth)
