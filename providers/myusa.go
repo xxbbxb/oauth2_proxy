@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/melnikk/oauth2_proxy/api"
+	"github.com/skbkontur/oauth2_proxy/api"
 )
 
 type MyUsaProvider struct {

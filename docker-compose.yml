@@ -10,7 +10,7 @@ services:
 
   proxy:
     build: .
-    image: melnikk/oauth2_proxy
+    image: skbkontur/oauth2_proxy
     volumes:
       - "./etc/oauth2_proxy.cfg:/etc/oauth2_proxy.cfg"
     command: /etc/oauth2_proxy.cfg

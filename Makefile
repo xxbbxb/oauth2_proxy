@@ -32,7 +32,7 @@ rpm:
 default: build
 
 run: clean build
-	./build/oauth2-proxy -provider=passport -config etc/oauth2_proxy.cfg
+	./build/usr/bin/oauth2-proxy -provider=passport -config etc/oauth2_proxy.cfg
 
 docker:
 	docker-compose build

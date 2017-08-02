@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bitly/go-simplejson"
-	"github.com/melnikk/oauth2_proxy/api"
+	"github.com/skbkontur/oauth2_proxy/api"
 	"log"
 	"net/http"
 	"net/url"

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/melnikk/oauth2_proxy/api"
+	"github.com/skbkontur/oauth2_proxy/api"
 )
 
 // stripToken is a helper function to obfuscate "access_token"

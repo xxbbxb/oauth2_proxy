@@ -17,7 +17,7 @@ import (
 
 	"github.com/18F/hmacauth"
 	"github.com/bmizerany/assert"
-	"github.com/melnikk/oauth2_proxy/providers"
+	"github.com/skbkontur/oauth2_proxy/providers"
 )
 
 func init() {

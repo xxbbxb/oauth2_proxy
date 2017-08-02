@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/18F/hmacauth"
-	"github.com/melnikk/oauth2_proxy/cookie"
-	"github.com/melnikk/oauth2_proxy/providers"
+	"github.com/skbkontur/oauth2_proxy/cookie"
+	"github.com/skbkontur/oauth2_proxy/providers"
 )
 
 const SignatureHeader = "GAP-Signature"
