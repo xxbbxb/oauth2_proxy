@@ -448,8 +448,6 @@ func getRemoteAddr(req *http.Request) (s string) {
 
 func (p *OAuthProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	switch path := req.URL.Path; {
-	case req.Header.Get("X-Requested-With") == "XMLHttpRequest":
-		p.serveMux.ServeHTTP(rw, req)
 	case path == p.RobotsPath:
 		p.RobotsTxt(rw)
 	case path == p.PingPath:
@@ -657,6 +655,10 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 		if err != nil {
 			log.Printf("%s %s", remoteAddr, err)
 		}
+	}
+
+	if req.Header.Get("X-Requested-With") == "XMLHttpRequest" {
+		return http.StatusAccepted
 	}
 
 	if session == nil {
