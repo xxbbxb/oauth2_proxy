@@ -1,4 +1,4 @@
-FROM golang:1.9 AS builder
+FROM golang:1.9 as builder
 
 WORKDIR /go/src/github.com/skbkontur/oauth2_proxy
 COPY . /go/src/github.com/skbkontur/oauth2_proxy/
