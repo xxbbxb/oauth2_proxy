@@ -657,10 +657,6 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 		}
 	}
 
-	if req.Header.Get("X-Requested-With") == "XMLHttpRequest" {
-		return http.StatusAccepted
-	}
-
 	if session == nil {
 		return http.StatusForbidden
 	}
