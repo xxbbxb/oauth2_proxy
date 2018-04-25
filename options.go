@@ -75,6 +75,11 @@ type Options struct {
 
 	SignatureKey string `flag:"signature-key" cfg:"signature_key" env:"OAUTH2_PROXY_SIGNATURE_KEY"`
 
+	StatsDEnabled     bool `flag:"statsd-enabled" cfg:"statsd_enabled"`
+	StatsDAddress     string `flag:"statsd-address" cfg:"statsd_address"`
+	StatsDPrefix      string `flag:"statsd-prefix" cfg:"statsd_prefix"`
+	StatsDURIPatterns []string `flag:"statsd-uri-patterns" cfg:"statsd_uri_patterns"`
+
 	// internal values that are set after config validation
 	redirectURL   *url.URL
 	proxyURLs     []*url.URL

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/alexcesaro/statsd.v2"
 	"github.com/BurntSushi/toml"
 	"github.com/mreiferson/go-options"
 )
@@ -21,6 +22,7 @@ func main() {
 	upstreams := StringArray{}
 	skipAuthRegex := StringArray{}
 	googleGroups := StringArray{}
+	statsdPatterns := StringArray{}
 
 	config := flagSet.String("config", "", "path to config file")
 	showVersion := flagSet.Bool("version", false, "print version string")
@@ -80,6 +82,11 @@ func main() {
 
 	flagSet.String("signature-key", "", "GAP-Signature request signature key (algorithm:secretkey)")
 
+	flagSet.Bool("statsd-enabled", false, "If true, StatsD metrics sender will be enabled")
+	flagSet.String("statsd-address", "", "StatsD address")
+	flagSet.String("statsd-prefix", "Oauth2Proxy.requests", "StatsD metrics prefix")
+	flagSet.Var(&statsdPatterns, "statsd-uri-patterns", "StatsD uri patterns")
+
 	flagSet.Parse(os.Args[1:])
 
 	if *showVersion {
@@ -128,5 +135,18 @@ func main() {
 		Handler: LoggingHandler(os.Stdout, oauthproxy, opts.RequestLogging),
 		Opts:    opts,
 	}
+
+	if s.Opts.StatsDEnabled == true {
+		metrics, err := statsd.New(
+			statsd.Address(s.Opts.StatsDAddress),
+			statsd.Prefix(s.Opts.StatsDPrefix),
+		)
+		if err != nil {
+			log.Printf("can't use statsd sender: %s", err.Error())
+		} else {
+			s.Metrics = metrics
+		}
+	}
+
 	s.ListenAndServe()
 }

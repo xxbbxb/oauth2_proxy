@@ -8,9 +8,12 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"gopkg.in/alexcesaro/statsd.v2"
 )
 
 type Server struct {
+	Metrics *statsd.Client
 	Handler http.Handler
 	Opts    *Options
 }
