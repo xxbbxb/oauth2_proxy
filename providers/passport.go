@@ -144,13 +144,13 @@ func (p *PassportProvider) getGroups(token string) ([]string, error) {
 		log.Printf("failed making request %s", err.Error())
 		return nil, err
 	}
-	
+
 	groupJson := json.Get("group")
-        groups, err := groupJson.String()
-        if err == nil {
-                return strings.Split(groups, ","), nil
-        }
-        return groupJson.StringArray()
+	groups, err := groupJson.String()
+	if err == nil {
+		return strings.Split(groups, ","), nil
+	}
+	return groupJson.StringArray()
 }
 
 // ValidateGroup validates that the provided email exists in the configured provider
