@@ -667,10 +667,6 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 		return http.StatusForbidden
 	}
 
-	if p.StatsD != nil {
-		p.incrementBasicSuccess(session.User, req.Method)
-	}
-
 	// At this point, the user is authenticated. proxy normally
 	if p.PassBasicAuth {
 		req.SetBasicAuth(session.User, p.BasicAuthPassword)
@@ -725,6 +721,9 @@ func (p *OAuthProxy) CheckBasicAuth(req *http.Request) (*providers.SessionState,
 	}
 	if p.HtpasswdFile.Validate(pair[0], pair[1]) {
 		log.Printf("authenticated %q via basic auth", pair[0])
+		if p.StatsD != nil {
+			p.incrementBasicSuccess(pair[0], req.Method)
+		}
 		return &providers.SessionState{User: pair[0]}, nil
 	}
 	return nil, fmt.Errorf("%s not in HtpasswdFile", pair[0])
