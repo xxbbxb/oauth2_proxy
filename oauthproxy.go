@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/18F/hmacauth"
+	"github.com/alexcesaro/statsd"
 	"github.com/skbkontur/oauth2_proxy/cookie"
 	"github.com/skbkontur/oauth2_proxy/providers"
 )
@@ -72,6 +73,8 @@ type OAuthProxy struct {
 	compiledRegex       []*regexp.Regexp
 	templates           *template.Template
 	Footer              string
+
+	StatsD *statsd.Client
 }
 
 type UpstreamProxy struct {
@@ -654,11 +657,18 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 		session, err = p.CheckBasicAuth(req)
 		if err != nil {
 			log.Printf("%s %s", remoteAddr, err)
+			if p.StatsD != nil {
+				p.incrementBasicFailed(req.Method)
+			}
 		}
 	}
 
 	if session == nil {
 		return http.StatusForbidden
+	}
+
+	if p.StatsD != nil {
+		p.incrementBasicSuccess(session.User, req.Method)
 	}
 
 	// At this point, the user is authenticated. proxy normally

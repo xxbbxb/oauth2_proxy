@@ -35,6 +35,12 @@
 			"revisionTime": "2017-03-18T20:29:13Z"
 		},
 		{
+			"checksumSHA1": "FwnK5IibIGwMAMezII5nI/lsI7A=",
+			"path": "github.com/alexcesaro/statsd",
+			"revision": "7fea3f0d2fab1ad973e641e51dba45443a311a90",
+			"revisionTime": "2016-03-20T18:21:10Z"
+		},
+		{
 			"checksumSHA1": "0EhLvZ6Og9HYqJtCc2Dzs1EgM30=",
 			"path": "github.com/bitly/go-simplejson",
 			"revision": "da1a8928f709389522c8023062a3739f3b4af419",
