@@ -12,8 +12,6 @@ import (
 	"os"
 	"strings"
 
-	watcher "github.com/skbkontur/oauth2_proxy/watcher"
-
 	simplejson "github.com/bitly/go-simplejson"
 	"github.com/dgrijalva/jwt-go"
 	yaml "gopkg.in/yaml.v2"
@@ -195,12 +193,18 @@ func (p *PassportProvider) GetLoginURL(redirectURI, state string) string {
 
 func (p *PassportProvider) LoadAllowed() {
 	p.userGroupsStore = make(inMemoryUserGroupsStore)
-	p.auth = make(authConfiguration)
-	p.updateAllowedGroups()
-	authFile := os.Getenv("AUTH_FILE")
-	if authFile != "" {
-		watcher.WatchForUpdates(authFile, nil, p.updateAllowedGroups)
+	auth := os.Getenv("AUTH_FILE")
+	yamlFile, err := ioutil.ReadFile(auth)
+	if err != nil {
+		log.Printf("yamlFile.Get err %v, %s ", err, auth)
+		return
 	}
+	err = yaml.Unmarshal(yamlFile, &p.auth)
+	if err != nil {
+		log.Fatalf("yaml.Unmarshal err %v", err)
+		return
+	}
+	log.Printf("Loaded %s", string(yamlFile))
 }
 
 func (p *PassportProvider) getAllowedGroups(uri string) map[string]bool {
@@ -220,19 +224,4 @@ func (p *PassportProvider) getAllowedGroups(uri string) map[string]bool {
 		}
 	}
 	return res
-}
-
-func (p *PassportProvider) updateAllowedGroups() {
-	authFile := os.Getenv("AUTH_FILE")
-	yamlFile, err := ioutil.ReadFile(authFile)
-	if err != nil {
-		log.Printf("yamlFile.Get err %v, %s ", err, authFile)
-		return
-	}
-	err = yaml.Unmarshal(yamlFile, &p.auth)
-	if err != nil {
-		log.Fatalf("yaml.Unmarshal err %v", err)
-		return
-	}
-	log.Printf("Loaded %s", string(yamlFile))
 }
