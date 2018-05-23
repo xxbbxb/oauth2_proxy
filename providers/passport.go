@@ -9,21 +9,24 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
+
+	watcher "github.com/skbkontur/oauth2_proxy/watcher"
 
 	simplejson "github.com/bitly/go-simplejson"
 	"github.com/dgrijalva/jwt-go"
-	"gopkg.in/yaml.v2"
-	"os"
+	yaml "gopkg.in/yaml.v2"
 )
 
-
-type AuthConfiguration map[string][]string
+type authConfiguration map[string][]string
+type inMemoryUserGroupsStore map[string][]string
 
 // PassportProvider of auth
 type PassportProvider struct {
 	*ProviderData
-	auth          AuthConfiguration
+	userGroupsStore inMemoryUserGroupsStore
+	auth            authConfiguration
 }
 
 // NewPassportProvider creates passport provider
@@ -84,22 +87,20 @@ func (p *PassportProvider) GetEmailAddress(s *SessionState) (string, error) {
 	})
 	if err == nil && token.Valid {
 		login := strings.ToLower(token.Claims["sub"].(string))
-
 		loginParts := strings.Split(login, "\\")
-		if len(loginParts)>1 {
+		if len(loginParts) > 1 {
 			email = fmt.Sprintf("%s@%s", loginParts[1], loginParts[0])
-			groups, _ := p.getGroups(token.Raw)
-			s.CacheGroups(groups)
+			groups, err := p.getUserGroups(token.Raw)
+			if err != nil {
+				log.Printf("Failed to get %s groups: %s", email, err.Error())
+			}
+			p.userGroupsStore[email] = groups
 		} else {
 			email = fmt.Sprintf("%s@local", loginParts[0])
-			s.CacheGroups([]string{"local"})
+			p.userGroupsStore[email] = []string{"local"}
 		}
 	}
 	return email, err
-}
-
-func (s *SessionState) CacheGroups(groups []string) {
-	s.Groups = groups
 }
 
 func (p *PassportProvider) apiRequest(req *http.Request) (*simplejson.Json, error) {
@@ -118,7 +119,6 @@ func (p *PassportProvider) apiRequest(req *http.Request) (*simplejson.Json, erro
 		err = fmt.Errorf("got %d from %q %s", resp.StatusCode, p.RedeemURL.String(), body)
 		return nil, err
 	}
-
 	data, err := simplejson.NewJson(body)
 	if err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ func (p *PassportProvider) apiRequest(req *http.Request) (*simplejson.Json, erro
 
 }
 
-func (p *PassportProvider) getGroups(token string) ([]string, error) {
+func (p *PassportProvider) getUserGroups(token string) ([]string, error) {
 	params := url.Values{}
 	params.Add("client_id", p.ClientID)
 	params.Add("client_secret", p.ClientSecret)
@@ -153,21 +153,30 @@ func (p *PassportProvider) getGroups(token string) ([]string, error) {
 	return groupJson.StringArray()
 }
 
-// ValidateGroup validates that the provided email exists in the configured provider
-// email group(s).
-func (p *PassportProvider) ValidateGroupByHost(host string, groups []string) bool {
-	allowedGroups := p.getAllowedGroups(host)
+// ValidateRequest validates that the request fits configured provider
+// authorization groups
+func (p *PassportProvider) ValidateRequest(req *http.Request, s *SessionState) (bool, error) {
+	if s == nil {
+		return false, errors.New("Session not established")
+	}
+	uri := strings.Split(req.Host, ":")[0] + req.URL.Path
+	allowedGroups := p.getAllowedGroups(uri)
 	_, exAll := allowedGroups["*"]
 	if exAll {
-		return true
+		return true, nil
+	}
+	groups, isKnownUser := p.userGroupsStore[s.Email]
+	if !isKnownUser {
+		return false, errors.New("Session need to be re-established")
 	}
 	for _, group := range groups {
 		val, ex := allowedGroups[group]
 		if ex && val {
-			return true
+			return true, nil
 		}
 	}
-	return false
+
+	return false, nil
 }
 
 // GetLoginURL with typical oauth parameters
@@ -185,20 +194,25 @@ func (p *PassportProvider) GetLoginURL(redirectURI, state string) string {
 }
 
 func (p *PassportProvider) LoadAllowed() {
-	auth := os.Getenv("AUTH_FILE")
-	yamlFile, err := ioutil.ReadFile(auth)
-	if err != nil {
-		log.Printf("yamlFile.Get err   #%v, %s ", err, auth)
-	}
-	p.auth = make(AuthConfiguration)
-	err = yaml.Unmarshal(yamlFile, &p.auth)
-	if err != nil {
-		log.Fatalf("Unmarshal: %v", err)
+	p.userGroupsStore = make(inMemoryUserGroupsStore)
+	p.auth = make(authConfiguration)
+	p.updateAllowedGroups()
+	authFile := os.Getenv("AUTH_FILE")
+	if authFile != "" {
+		watcher.WatchForUpdates(authFile, nil, p.updateAllowedGroups)
 	}
 }
 
-func (p *PassportProvider) getAllowedGroups(host string) map[string]bool {
-	groups, ex := p.auth[host]
+func (p *PassportProvider) getAllowedGroups(uri string) map[string]bool {
+	bestMatch := ""
+	for key := range p.auth {
+		if strings.HasPrefix(uri, key) {
+			if len(bestMatch) < len(key) {
+				bestMatch = key
+			}
+		}
+	}
+	groups, ex := p.auth[bestMatch]
 	res := make(map[string]bool)
 	if ex {
 		for _, group := range groups {
@@ -206,4 +220,19 @@ func (p *PassportProvider) getAllowedGroups(host string) map[string]bool {
 		}
 	}
 	return res
+}
+
+func (p *PassportProvider) updateAllowedGroups() {
+	authFile := os.Getenv("AUTH_FILE")
+	yamlFile, err := ioutil.ReadFile(authFile)
+	if err != nil {
+		log.Printf("yamlFile.Get err %v, %s ", err, authFile)
+		return
+	}
+	err = yaml.Unmarshal(yamlFile, &p.auth)
+	if err != nil {
+		log.Fatalf("yaml.Unmarshal err %v", err)
+		return
+	}
+	log.Printf("Loaded %s", string(yamlFile))
 }

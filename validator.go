@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"unsafe"
+
+	"github.com/skbkontur/oauth2_proxy/watcher"
 )
 
 type UserMap struct {
@@ -21,7 +23,7 @@ func NewUserMap(usersFile string, done <-chan bool, onUpdate func()) *UserMap {
 	atomic.StorePointer(&um.m, unsafe.Pointer(&m))
 	if usersFile != "" {
 		log.Printf("using authenticated emails file %s", usersFile)
-		WatchForUpdates(usersFile, done, func() {
+		watcher.WatchForUpdates(usersFile, done, func() {
 			um.LoadAuthenticatedEmailsFile()
 			onUpdate()
 		})
