@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 
 	simplejson "github.com/bitly/go-simplejson"
 	"github.com/dgrijalva/jwt-go"
@@ -18,13 +19,12 @@ import (
 )
 
 type authConfiguration map[string][]string
-type inMemoryUserGroupsStore map[string][]string
 
 // PassportProvider of auth
 type PassportProvider struct {
 	*ProviderData
-	userGroupsStore inMemoryUserGroupsStore
-	auth            authConfiguration
+	userGroups sync.Map
+	auth       authConfiguration
 }
 
 // NewPassportProvider creates passport provider
@@ -92,10 +92,10 @@ func (p *PassportProvider) GetEmailAddress(s *SessionState) (string, error) {
 			if err != nil {
 				log.Printf("Failed to get %s groups: %s", email, err.Error())
 			}
-			p.userGroupsStore[email] = groups
+			p.userGroups.Store(email, groups)
 		} else {
 			email = fmt.Sprintf("%s@local", loginParts[0])
-			p.userGroupsStore[email] = []string{"local"}
+			p.userGroups.Store(email, []string{"local"})
 		}
 	}
 	return email, err
@@ -163,11 +163,11 @@ func (p *PassportProvider) ValidateRequest(req *http.Request, s *SessionState) (
 	if exAll {
 		return true, nil
 	}
-	groups, isKnownUser := p.userGroupsStore[s.Email]
+	groups, isKnownUser := p.userGroups.Load(s.Email)
 	if !isKnownUser {
 		return false, errors.New("Session need to be re-established")
 	}
-	for _, group := range groups {
+	for _, group := range groups.([]string) {
 		val, ex := allowedGroups[group]
 		if ex && val {
 			return true, nil
@@ -192,7 +192,6 @@ func (p *PassportProvider) GetLoginURL(redirectURI, state string) string {
 }
 
 func (p *PassportProvider) LoadAllowed() {
-	p.userGroupsStore = make(inMemoryUserGroupsStore)
 	auth := os.Getenv("AUTH_FILE")
 	yamlFile, err := ioutil.ReadFile(auth)
 	if err != nil {
@@ -204,7 +203,6 @@ func (p *PassportProvider) LoadAllowed() {
 		log.Fatalf("yaml.Unmarshal err %v", err)
 		return
 	}
-	log.Printf("Loaded %s", string(yamlFile))
 }
 
 func (p *PassportProvider) getAllowedGroups(uri string) map[string]bool {
